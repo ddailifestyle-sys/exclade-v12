@@ -9,31 +9,16 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as IndexRouteImport } from './routes/index'
-import { Route as AboutRouteImport } from './routes/about'
-import { Route as ContactRouteImport } from './routes/contact'
-import { Route as CrewRouteImport } from './routes/crew'
-import { Route as EventsRouteImport } from './routes/events'
 import { Route as RegisterRouteImport } from './routes/register'
+import { Route as EventsRouteImport } from './routes/events'
+import { Route as CrewRouteImport } from './routes/crew'
+import { Route as ContactRouteImport } from './routes/contact'
+import { Route as AboutRouteImport } from './routes/about'
+import { Route as IndexRouteImport } from './routes/index'
 
-const IndexRoute = IndexRouteImport.update({
-  id: '/',
-  path: '/',
-  getParentRoute: () => rootRouteImport,
-} as any).lazy(() => import('./routes/index.lazy').then((d) => d.Route))
-const AboutRoute = AboutRouteImport.update({
-  id: '/about',
-  path: '/about',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ContactRoute = ContactRouteImport.update({
-  id: '/contact',
-  path: '/contact',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const CrewRoute = CrewRouteImport.update({
-  id: '/crew',
-  path: '/crew',
+const RegisterRoute = RegisterRouteImport.update({
+  id: '/register',
+  path: '/register',
   getParentRoute: () => rootRouteImport,
 } as any)
 const EventsRoute = EventsRouteImport.update({
@@ -41,11 +26,26 @@ const EventsRoute = EventsRouteImport.update({
   path: '/events',
   getParentRoute: () => rootRouteImport,
 } as any)
-const RegisterRoute = RegisterRouteImport.update({
-  id: '/register',
-  path: '/register',
+const CrewRoute = CrewRouteImport.update({
+  id: '/crew',
+  path: '/crew',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ContactRoute = ContactRouteImport.update({
+  id: '/contact',
+  path: '/contact',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AboutRoute = AboutRouteImport.update({
+  id: '/about',
+  path: '/about',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const IndexRoute = IndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any).lazy(() => import('./routes/index.lazy').then((d) => d.Route))
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -92,32 +92,11 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/': {
-      id: '/'
-      path: '/'
-      fullPath: '/'
-      preLoaderRoute: typeof IndexRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/about': {
-      id: '/about'
-      path: '/about'
-      fullPath: '/about'
-      preLoaderRoute: typeof AboutRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/contact': {
-      id: '/contact'
-      path: '/contact'
-      fullPath: '/contact'
-      preLoaderRoute: typeof ContactRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/crew': {
-      id: '/crew'
-      path: '/crew'
-      fullPath: '/crew'
-      preLoaderRoute: typeof CrewRouteImport
+    '/register': {
+      id: '/register'
+      path: '/register'
+      fullPath: '/register'
+      preLoaderRoute: typeof RegisterRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/events': {
@@ -127,11 +106,32 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof EventsRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/register': {
-      id: '/register'
-      path: '/register'
-      fullPath: '/register'
-      preLoaderRoute: typeof RegisterRouteImport
+    '/crew': {
+      id: '/crew'
+      path: '/crew'
+      fullPath: '/crew'
+      preLoaderRoute: typeof CrewRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/contact': {
+      id: '/contact'
+      path: '/contact'
+      fullPath: '/contact'
+      preLoaderRoute: typeof ContactRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/about': {
+      id: '/about'
+      path: '/about'
+      fullPath: '/about'
+      preLoaderRoute: typeof AboutRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/': {
+      id: '/'
+      path: '/'
+      fullPath: '/'
+      preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
   }
