@@ -295,7 +295,7 @@ html {
   opacity: .9;
 }
 
-.exclade-app> :not(.gravity-water-canvas):not(.particle-field):not(.lab-ambience) {
+.exclade-app> :not(.gravity-water-canvas):not(.particle-field):not(.lab-ambience):not(.env-layer):not(.lab-cursor-v2):not(.cursor-trail-canvas) {
   position: relative;
   z-index: 1;
 }
@@ -4530,3 +4530,264 @@ button.primary-cta {
 }
 
 .register-submit-row .secondary-cta { margin-right: auto; }
+
+/* ============ EXCLADE environmental system (decorative layer) ============ */
+
+.env-layer {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  overflow: hidden;
+  contain: strict;
+}
+
+.env-layer>* {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.env-atmosphere {
+  background:
+    radial-gradient(120% 90% at 50% -10%, color-mix(in oklab, var(--amber) 6%, transparent), transparent 60%),
+    linear-gradient(180deg, color-mix(in oklab, var(--ink-deep) 55%, transparent), transparent 45%, color-mix(in oklab, var(--ink-deep) 70%, transparent));
+}
+
+.env-light {
+  mix-blend-mode: screen;
+  opacity: .5;
+}
+
+.env-light-warm {
+  background: radial-gradient(60% 45% at 18% 12%, color-mix(in oklab, var(--amber) 16%, transparent), transparent 70%);
+  animation: env-light-drift 26s ease-in-out infinite alternate;
+}
+
+.env-light-lab {
+  background: radial-gradient(45% 40% at 84% 78%, color-mix(in oklab, var(--lime) 9%, transparent), transparent 72%);
+  animation: env-light-drift 34s ease-in-out infinite alternate-reverse;
+}
+
+@keyframes env-light-drift {
+  from {
+    transform: translate3d(-1.5%, -1%, 0) scale(1);
+    opacity: .38;
+  }
+
+  to {
+    transform: translate3d(2%, 1.5%, 0) scale(1.06);
+    opacity: .58;
+  }
+}
+
+.env-haze {
+  background:
+    radial-gradient(70% 50% at 30% 70%, color-mix(in oklab, var(--sand) 4%, transparent), transparent 70%),
+    radial-gradient(60% 45% at 78% 30%, color-mix(in oklab, var(--sand) 3%, transparent), transparent 72%);
+  animation: env-haze-drift 48s linear infinite;
+}
+
+@keyframes env-haze-drift {
+  from {
+    transform: translate3d(-3%, 0, 0);
+  }
+
+  to {
+    transform: translate3d(3%, -1%, 0);
+  }
+}
+
+.env-vignette {
+  background: radial-gradient(120% 90% at 50% 50%, transparent 55%, color-mix(in oklab, var(--ink-deep) 72%, transparent));
+}
+
+.sand-canvas {
+  width: 100%;
+  height: 100%;
+}
+
+/* ---- custom cursor ---- */
+
+@media (pointer: fine) {
+  body.has-lab-cursor,
+  body.has-lab-cursor * {
+    cursor: none !important;
+  }
+}
+
+.cursor-trail-canvas {
+  position: fixed;
+  inset: 0;
+  z-index: 99;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+.lab-cursor-v2 {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 100;
+  width: 0;
+  height: 0;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 180ms ease;
+  will-change: transform;
+}
+
+.lab-cursor-v2.is-visible {
+  opacity: 1;
+}
+
+.lab-cursor-v2 span {
+  position: absolute;
+  pointer-events: none;
+}
+
+.lc-core {
+  top: -1.5px;
+  left: -1.5px;
+  width: 3px;
+  height: 3px;
+  border-radius: 50%;
+  background: color-mix(in oklab, var(--amber-bright) 92%, white);
+  box-shadow: 0 0 5px color-mix(in oklab, var(--amber) 65%, transparent);
+}
+
+.lc-ring {
+  top: -9px;
+  left: -9px;
+  width: 18px;
+  height: 18px;
+  border: 1px solid color-mix(in oklab, var(--sand) 42%, transparent);
+  border-radius: 50%;
+  transform: rotate(var(--cursor-angle, 0rad)) scaleX(var(--cursor-stretch, 1));
+  transition: width 180ms ease, height 180ms ease, top 180ms ease, left 180ms ease, border-color 180ms ease;
+}
+
+.lc-ring-secondary {
+  top: -15px;
+  left: -15px;
+  width: 30px;
+  height: 30px;
+  border: 1px solid color-mix(in oklab, var(--amber) 26%, transparent);
+  border-radius: 50%;
+  opacity: 0;
+  transform: scale(.7);
+  transition: opacity 200ms ease, transform 220ms cubic-bezier(.2, .8, .2, 1);
+}
+
+.lc-streak {
+  top: -.5px;
+  left: calc(-1 * var(--cursor-trail, 0px));
+  width: var(--cursor-trail, 0px);
+  height: 1px;
+  background: linear-gradient(90deg, transparent, color-mix(in oklab, var(--sand) 32%, transparent));
+  transform-origin: right center;
+  transform: rotate(var(--cursor-angle, 0rad));
+  opacity: .8;
+}
+
+.lc-ripple {
+  top: -6px;
+  left: -6px;
+  width: 12px;
+  height: 12px;
+  border: 1px solid color-mix(in oklab, var(--amber) 55%, transparent);
+  border-radius: 50%;
+  opacity: 0;
+}
+
+.lc-label {
+  top: 14px;
+  left: 16px;
+  font: .48rem "Space Mono", monospace;
+  letter-spacing: .22em;
+  color: color-mix(in oklab, var(--sand) 62%, transparent);
+  opacity: 0;
+  transition: opacity 180ms ease;
+  white-space: nowrap;
+}
+
+.lc-label.is-shown {
+  opacity: 1;
+}
+
+.lab-cursor-v2.is-hover .lc-ring {
+  top: -13px;
+  left: -13px;
+  width: 26px;
+  height: 26px;
+  border-color: color-mix(in oklab, var(--amber) 62%, transparent);
+}
+
+.lab-cursor-v2.is-hover .lc-ring-secondary {
+  opacity: 1;
+  transform: scale(1);
+}
+
+.lab-cursor-v2.is-target .lc-ring {
+  top: -11px;
+  left: -11px;
+  width: 22px;
+  height: 22px;
+  border-color: color-mix(in oklab, var(--lime) 55%, transparent);
+  border-radius: 2px;
+}
+
+.lab-cursor-v2.is-pressed .lc-ripple {
+  animation: lc-ripple 420ms ease-out;
+}
+
+.lab-cursor-v2.is-pressed .lc-ring {
+  animation: lc-ring-pop 380ms ease-out;
+}
+
+@keyframes lc-ripple {
+  0% {
+    opacity: .85;
+    transform: scale(.4);
+  }
+
+  100% {
+    opacity: 0;
+    transform: scale(2.6);
+  }
+}
+
+@keyframes lc-ring-pop {
+  0% {
+    transform: scale(1);
+  }
+
+  40% {
+    transform: scale(1.35);
+  }
+
+  100% {
+    transform: scale(1);
+  }
+}
+
+/* subtle highlight while the targeting cursor is over a card */
+.event-card:hover,
+.file-card:hover,
+.personnel-card:hover {
+  box-shadow: 0 0 0 1px color-mix(in oklab, var(--amber) 22%, transparent);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .env-light-warm,
+  .env-light-lab,
+  .env-haze {
+    animation: none;
+  }
+
+  .lc-streak,
+  .cursor-trail-canvas {
+    display: none;
+  }
+}

@@ -14,7 +14,8 @@ import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 import { CinematicLoader } from "@/components/CinematicLoader";
 import { GravityWaterCanvas } from "@/components/GravityWaterCanvas";
-import { LabCursor } from "@/components/LabCursor";
+import { CustomCursor } from "@/components/environment/CustomCursor";
+import { EnvironmentalBackground } from "@/components/environment/EnvironmentalBackground";
 import { LabAmbience } from "@/components/LabAmbience";
 import { PageTransition } from "@/components/PageTransition";
 import { ParticleField } from "@/components/ParticleField";
@@ -149,7 +150,8 @@ function RootComponent() {
   return (
     <QueryClientProvider client={queryClient}>
       <div className="exclade-app">
-        <LabCursor />
+        <CustomCursor />
+        <EnvironmentalBackground />
         {showLoader && <CinematicLoader />}
         {!showLoader && (
           <>
