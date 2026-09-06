@@ -315,9 +315,11 @@ export function SandCanvas() {
       }
     };
 
+    let unsubscribe: (() => void) | null = null;
+
     try {
       resize();
-      const unsubscribe = subscribeEnvironmentTuning((nextTuning) => {
+      unsubscribe = subscribeEnvironmentTuning((nextTuning) => {
         tuning = nextTuning;
         buildLayers();
       });
@@ -336,7 +338,7 @@ export function SandCanvas() {
       window.removeEventListener("pointermove", onPointerMove);
       window.removeEventListener("scroll", onScroll);
       document.removeEventListener("visibilitychange", onVisibility);
-      unsubscribe();
+      unsubscribe?.();
     };
   }, []);
 
