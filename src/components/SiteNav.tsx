@@ -2,6 +2,8 @@ import { Link } from "@tanstack/react-router";
 import { Menu, X } from "lucide-react";
 import { useEffect, useState } from "react";
 
+import { IntroMusic } from "@/components/IntroMusic";
+
 const navItems = [
   ["HOME", "/"],
   ["ABOUT", "/about"],
@@ -50,6 +52,8 @@ export function SiteNav() {
             </Link>
           ))}
         </nav>
+
+        <IntroMusic />
 
         <button
           type="button"

@@ -83,22 +83,59 @@ export function IntroMusic() {
     };
   }, []);
 
-  const toggle = async () => {
-    const audio = audioRef.current;
-    if (!audio) return;
-    if (audio.paused) {
+  /* Start the cinematic loop on the visitor's first interaction (browsers block
+     autoplay before that). Muted by choice is remembered and respected. */
+  useEffect(() => {
+    if (window.localStorage.getItem("exclade-music-muted") === "true") return;
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+
+    let done = false;
+    const start = async () => {
+      if (done) return;
+      done = true;
+      remove();
+      const audio = audioRef.current;
+      if (!audio) return;
       try {
+        audio.loop = true;
         await audio.play();
         setPlaying(true);
         fadeTo(targetVolumeRef.current);
       } catch {
         setPlaying(await startFallback());
       }
+    };
+    const remove = () => {
+      window.removeEventListener("pointerdown", start);
+      window.removeEventListener("keydown", start);
+      window.removeEventListener("touchstart", start);
+    };
+    window.addEventListener("pointerdown", start, { once: false });
+    window.addEventListener("keydown", start);
+    window.addEventListener("touchstart", start);
+    return remove;
+  }, []);
+
+  const toggle = async () => {
+    const audio = audioRef.current;
+    if (!audio) return;
+    if (audio.paused) {
+      try {
+        audio.loop = true;
+        await audio.play();
+        setPlaying(true);
+        fadeTo(targetVolumeRef.current);
+        window.localStorage.setItem("exclade-music-muted", "false");
+      } catch {
+        setPlaying(await startFallback());
+        window.localStorage.setItem("exclade-music-muted", "false");
+      }
     } else {
       fadeTo(0);
       window.setTimeout(() => audio.pause(), 380);
       stopFallback();
       setPlaying(false);
+      window.localStorage.setItem("exclade-music-muted", "true");
     }
   };
 
