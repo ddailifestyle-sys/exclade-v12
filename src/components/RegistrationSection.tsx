@@ -41,7 +41,7 @@ type ErrorKey = keyof Fields | "events" | "teamName" | "screenshot";
 type Step = 1 | 2 | 3 | 4;
 
 const steps: { id: Step; label: string }[] = [
-  { id: 1, label: "CHOOSE EVENTS" },
+  { id: 1, label: "CHOOSE EVENT" },
   { id: 2, label: "TEAM DETAILS" },
   { id: 3, label: "PAYMENT" },
   { id: 4, label: "DONE" },
@@ -89,8 +89,9 @@ export function RegistrationSection() {
     clearError(key);
   };
 
+  // One event per registration: selecting an event replaces the previous choice.
   const toggleEvent = (id: string) => {
-    setSelected((prev) => (prev.includes(id) ? prev.filter((n) => n !== id) : [...prev, id]));
+    setSelected((prev) => (prev[0] === id ? prev : [id]));
     clearError("events");
   };
 
@@ -104,7 +105,7 @@ export function RegistrationSection() {
 
   const goToDetails = () => {
     if (selected.length === 0) {
-      setErrors({ events: "SELECT AT LEAST ONE EVENT" });
+      setErrors({ events: "SELECT ONE EVENT" });
       return;
     }
     setMembers((prev) => prev.slice(0, Math.max(0, maxTeamSizeFor(selected) - 1)));
@@ -185,7 +186,7 @@ export function RegistrationSection() {
           <div>
             <p className="eyebrow">REGISTRATION</p>
             <h2 id="register-title">REGISTRATION TERMINAL</h2>
-            <p className="register-subtitle">CHOOSE EVENTS → TEAM DETAILS → PAY → UPLOAD PROOF</p>
+            <p className="register-subtitle">CHOOSE EVENT → TEAM DETAILS → PAY → UPLOAD PROOF</p>
           </div>
           <span className="file-count"><Lock aria-hidden="true" size={12} /> EXCLADE 2K26 // SECURE ACCESS</span>
         </div>
@@ -208,9 +209,9 @@ export function RegistrationSection() {
           {step === 1 && (
             <div className="register-form">
               <fieldset className="register-fieldset">
-                <legend>STEP 1 — SELECT YOUR EVENTS</legend>
+                <legend>STEP 1 — SELECT YOUR EVENT</legend>
                 <p className="register-hint">
-                  Pick one or more events. Team size and the payment channel are decided by your choices.
+                  Pick one event. Team size and the payment channel are decided by your choice.
                 </p>
 
                 {([1, 2] as EventDay[]).map((day) => (
@@ -225,8 +226,9 @@ export function RegistrationSection() {
                           key={event.id}
                         >
                           <input
-                            type="checkbox"
-                            checked={selected.includes(event.id)}
+                            type="radio"
+                            name="exclade-event"
+                            checked={selected[0] === event.id}
                             onChange={() => toggleEvent(event.id)}
                           />
                           <span className="event-option-box" aria-hidden="true" />
@@ -249,8 +251,8 @@ export function RegistrationSection() {
               <div className="register-submit-row">
                 <p className="register-demo-note">
                   {selected.length > 0
-                    ? `${selected.length} event(s) selected · Day ${days.join(" & ")}`
-                    : "No events selected yet."}
+                    ? `${selectedEvents[0]?.name ?? ""} · DAY ${days.join(" & ")}`
+                    : "No event selected yet."}
                 </p>
                 <button type="button" className="primary-cta" onClick={goToDetails}>
                   CONTINUE <span aria-hidden="true">→</span>
