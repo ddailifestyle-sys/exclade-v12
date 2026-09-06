@@ -1,81 +1,111 @@
 /**
- * CustomCursor — minimal targeting-instrument cursor with spring inertia,
- * velocity stretch, a short dust trail, hover/click states and a hard fail-safe
- * that restores the native pointer if anything goes wrong.
+ * CustomCursor + CursorInteraction.
+ * Minimal targeting instrument: glowing core, thin ring, inertia, dust trail,
+ * hover/click states. Desktop (fine pointer) only, never mounted on touch, and
+ * it restores the native cursor if anything goes wrong.
  */
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import { ENV_CONFIG } from "./config";
 import { atmosphere } from "./atmosphere";
 
-type TrailDot = { x: number; y: number; life: number; el: HTMLSpanElement };
+const INTERACTIVE = 'a,button,[role="button"],input,select,textarea,label,summary,[data-cursor]';
+const CARD_SELECTOR = "[data-cursor='target'],.event-card,.file-card,.personnel-card";
 
-const HOVER_SELECTOR =
-  "a, button, [role='button'], input[type='submit'], summary, label.event-option, .event-card, .personnel-card";
+type Mote = { x: number; y: number; vx: number; vy: number; life: number };
 
 export function CustomCursor() {
+  const [enabled, setEnabled] = useState(false);
   const rootRef = useRef<HTMLDivElement | null>(null);
+  const trailRef = useRef<HTMLCanvasElement | null>(null);
+  const labelRef = useRef<HTMLSpanElement | null>(null);
 
   useEffect(() => {
-    const root = rootRef.current;
-    if (!root) return;
-
     const fine = window.matchMedia("(pointer: fine)");
+    setEnabled(fine.matches);
+    const onChange = () => setEnabled(fine.matches);
+    fine.addEventListener("change", onChange);
+    return () => fine.removeEventListener("change", onChange);
+  }, []);
+
+  useEffect(() => {
+    if (!enabled) return;
+    const root = rootRef.current;
+    const canvas = trailRef.current;
+    if (!root || !canvas) return;
+
+    let ctx: CanvasRenderingContext2D | null = null;
+    try {
+      ctx = canvas.getContext("2d");
+    } catch {
+      ctx = null;
+    }
+    if (!ctx) {
+      document.body.classList.remove("has-lab-cursor");
+      return;
+    }
+    const context = ctx;
+
     const reduce = window.matchMedia("(prefers-reduced-motion: reduce)");
-    if (!fine.matches) return; // mobile/touch: no fake cursor at all
+    document.body.classList.add("has-lab-cursor");
 
-    const ring = root.querySelector<HTMLElement>(".env-cursor-ring");
-    const dot = root.querySelector<HTMLElement>(".env-cursor-dot");
-    const halo = root.querySelector<HTMLElement>(".env-cursor-halo");
-    const label = root.querySelector<HTMLElement>(".env-cursor-label");
-    const trailHost = root.querySelector<HTMLElement>(".env-cursor-trail");
-    if (!ring || !dot || !halo || !label || !trailHost) return; // fail-safe
-
-    document.documentElement.classList.add("has-env-cursor");
-
-    let x = window.innerWidth / 2;
-    let y = window.innerHeight / 2;
-    let tx = x;
-    let ty = y;
+    let target = { x: window.innerWidth / 2, y: window.innerHeight / 2 };
+    const view = { x: target.x, y: target.y };
+    const motes: Mote[] = Array.from({ length: 34 }, () => ({ x: 0, y: 0, vx: 0, vy: 0, life: 0 }));
     let frame = 0;
     let visible = false;
-    const trail: TrailDot[] = [];
-    const pool: HTMLSpanElement[] = [];
+    let dpr = 1;
 
-    const takeDot = () => {
-      const el = pool.pop() ?? document.createElement("span");
-      el.className = "env-cursor-speck";
-      if (!el.parentElement) trailHost.appendChild(el);
-      el.style.opacity = "0.6";
-      return el;
+    const resize = () => {
+      dpr = Math.min(window.devicePixelRatio || 1, 2);
+      canvas.width = Math.floor(window.innerWidth * dpr);
+      canvas.height = Math.floor(window.innerHeight * dpr);
+      canvas.style.width = `${window.innerWidth}px`;
+      canvas.style.height = `${window.innerHeight}px`;
+      context.setTransform(dpr, 0, 0, dpr, 0, 0);
     };
 
-    const onMove = (event: PointerEvent) => {
-      if (event.pointerType !== "mouse") return;
-      tx = event.clientX;
-      ty = event.clientY;
-      atmosphere.notePointer(tx, ty, performance.now());
-      if (!visible) {
-        visible = true;
-        root.classList.add("is-visible");
+    const spawnMotes = (count: number, x: number, y: number, power: number) => {
+      let spawned = 0;
+      for (const mote of motes) {
+        if (spawned >= count) break;
+        if (mote.life > 0) continue;
+        mote.x = x;
+        mote.y = y;
+        mote.vx = (Math.random() - 0.5) * power - atmosphere.pointer.vx * 0.12;
+        mote.vy = (Math.random() - 0.5) * power - atmosphere.pointer.vy * 0.12;
+        mote.life = 1;
+        spawned += 1;
       }
     };
 
-    const onOver = (event: PointerEvent) => {
-      const target = event.target as Element | null;
-      if (!target || typeof target.closest !== "function") return;
-      const interactive = target.closest(HOVER_SELECTOR);
-      const card = target.closest(".event-card, .personnel-card, label.event-option");
+    const onMove = (event: PointerEvent) => {
+      if (event.pointerType === "touch") return;
+      target = { x: event.clientX, y: event.clientY };
+      if (!visible) {
+        view.x = target.x;
+        view.y = target.y;
+        visible = true;
+        root.classList.add("is-visible");
+      }
+      const el = event.target as HTMLElement | null;
+      const interactive = el?.closest?.(INTERACTIVE);
+      const card = el?.closest?.(CARD_SELECTOR);
       root.classList.toggle("is-hover", Boolean(interactive));
-      root.classList.toggle("is-target", Boolean(card));
-      label.textContent = card ? "TARGET" : interactive ? "ACCESS" : "";
+      root.classList.toggle("is-target", Boolean(card) && !interactive);
+      if (labelRef.current) {
+        const label = interactive?.getAttribute("data-cursor-label");
+        labelRef.current.textContent = label ?? (interactive ? "ACCESS" : "");
+        labelRef.current.classList.toggle("is-shown", Boolean(interactive));
+      }
     };
 
     const onDown = (event: PointerEvent) => {
-      if (event.pointerType !== "mouse") return;
-      root.classList.add("is-click");
+      if (event.pointerType === "touch") return;
+      root.classList.add("is-pressed");
       atmosphere.addBurst(event.clientX, event.clientY);
-      window.setTimeout(() => root.classList.remove("is-click"), 420);
+      if (!reduce.matches) spawnMotes(8, event.clientX, event.clientY, 3.4);
+      window.setTimeout(() => root.classList.remove("is-pressed"), 420);
     };
 
     const onLeave = () => {
@@ -83,68 +113,76 @@ export function CustomCursor() {
       root.classList.remove("is-visible");
     };
 
-    const loop = () => {
+    const tick = () => {
       const lerp = reduce.matches ? 1 : ENV_CONFIG.cursorLerp;
-      const dx = tx - x;
-      const dy = ty - y;
-      x += dx * lerp;
-      y += dy * lerp;
+      view.x += (target.x - view.x) * lerp;
+      view.y += (target.y - view.y) * lerp;
 
-      const speed = Math.min(1, Math.hypot(dx, dy) / 45);
-      const stretch = reduce.matches ? 0 : speed;
-      const angle = (Math.atan2(dy, dx) * 180) / Math.PI;
+      const dx = target.x - view.x;
+      const dy = target.y - view.y;
+      const speed = Math.min(1, Math.hypot(dx, dy) / 46);
+      const angle = Math.atan2(dy, dx);
+      const stretch = reduce.matches ? 0 : Math.min(ENV_CONFIG.maxTrail, speed * ENV_CONFIG.maxTrail);
 
-      root.style.transform = `translate3d(${x}px, ${y}px, 0)`;
-      ring.style.transform = `rotate(${angle}deg) scaleX(${1 + stretch * 0.55}) scaleY(${1 - stretch * 0.18})`;
-      halo.style.opacity = String(0.18 + stretch * 0.35);
+      root.style.transform = `translate3d(${view.x}px, ${view.y}px, 0)`;
+      root.style.setProperty("--cursor-angle", `${angle}rad`);
+      root.style.setProperty("--cursor-stretch", `${1 + speed * 0.45}`);
+      root.style.setProperty("--cursor-trail", `${stretch}px`);
 
-      if (!reduce.matches && speed > 0.12 && trail.length < ENV_CONFIG.maxTrail) {
-        const el = takeDot();
-        el.style.transform = `translate3d(${x - dx * 0.6}px, ${y - dy * 0.6}px, 0)`;
-        trail.push({ x, y, life: 1, el });
+      if (!reduce.matches && speed > 0.16 && Math.random() < 0.6) {
+        spawnMotes(1, view.x - Math.cos(angle) * 8, view.y - Math.sin(angle) * 8, 1.1 + speed * 1.6);
       }
 
-      for (let i = trail.length - 1; i >= 0; i -= 1) {
-        const t = trail[i]!;
-        t.life -= 0.06;
-        if (t.life <= 0) {
-          t.el.style.opacity = "0";
-          pool.push(t.el);
-          trail.splice(i, 1);
-          continue;
-        }
-        t.el.style.opacity = String(t.life * 0.45);
+      context.clearRect(0, 0, window.innerWidth, window.innerHeight);
+      for (const mote of motes) {
+        if (mote.life <= 0) continue;
+        mote.life -= 0.045;
+        mote.vx *= 0.93;
+        mote.vy *= 0.93;
+        mote.x += mote.vx + atmosphere.windForce() * 0.25;
+        mote.y += mote.vy + 0.08;
+        context.fillStyle = `rgba(224, 196, 148, ${Math.max(0, mote.life) * 0.5})`;
+        context.fillRect(mote.x, mote.y, 1.4, 1.4);
       }
 
-      frame = window.requestAnimationFrame(loop);
+      frame = window.requestAnimationFrame(tick);
     };
 
-    window.addEventListener("pointermove", onMove, { passive: true });
-    window.addEventListener("pointerover", onOver, { passive: true });
-    window.addEventListener("pointerdown", onDown, { passive: true });
-    window.addEventListener("blur", onLeave);
-    document.addEventListener("pointerleave", onLeave);
-    frame = window.requestAnimationFrame(loop);
+    try {
+      resize();
+      window.addEventListener("resize", resize);
+      window.addEventListener("pointermove", onMove, { passive: true });
+      window.addEventListener("pointerdown", onDown, { passive: true });
+      document.addEventListener("pointerleave", onLeave);
+      frame = window.requestAnimationFrame(tick);
+    } catch {
+      document.body.classList.remove("has-lab-cursor");
+      root.style.display = "none";
+    }
 
     return () => {
       if (frame) window.cancelAnimationFrame(frame);
+      window.removeEventListener("resize", resize);
       window.removeEventListener("pointermove", onMove);
-      window.removeEventListener("pointerover", onOver);
       window.removeEventListener("pointerdown", onDown);
-      window.removeEventListener("blur", onLeave);
       document.removeEventListener("pointerleave", onLeave);
-      document.documentElement.classList.remove("has-env-cursor");
+      document.body.classList.remove("has-lab-cursor");
     };
-  }, []);
+  }, [enabled]);
+
+  if (!enabled) return null;
 
   return (
-    <div ref={rootRef} className="env-cursor" aria-hidden="true">
-      <span className="env-cursor-halo" />
-      <span className="env-cursor-ring" />
-      <span className="env-cursor-ring env-cursor-ring-outer" />
-      <span className="env-cursor-dot" />
-      <span className="env-cursor-label" />
-      <span className="env-cursor-trail" />
-    </div>
+    <>
+      <canvas ref={trailRef} className="cursor-trail-canvas" aria-hidden="true" />
+      <div ref={rootRef} className="lab-cursor-v2" aria-hidden="true">
+        <span className="lc-streak" />
+        <span className="lc-ring" />
+        <span className="lc-ring-secondary" />
+        <span className="lc-core" />
+        <span className="lc-ripple" />
+        <span ref={labelRef} className="lc-label" />
+      </div>
+    </>
   );
 }
