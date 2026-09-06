@@ -1,11 +1,18 @@
 import { Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
-import { CheckCircle2, Lock, Terminal } from "lucide-react";
-import { technicalEvents } from "@/data/technicalEvents";
-import { nonTechnicalEvents } from "@/data/nonTechnicalEvents";
-import { PaymentQrPanel } from "@/components/PaymentQrPanel";
-import { localDateKey, qrForState, readClicks, recordClick } from "@/lib/paymentQr";
+import { CheckCircle2, Lock, MailCheck, Terminal, Upload } from "lucide-react";
 
+import { PaymentQrPanel } from "@/components/PaymentQrPanel";
+import {
+  catalogEvents,
+  daysFor,
+  eventsByDay,
+  findEvent,
+  maxTeamSizeFor,
+  type EventDay,
+} from "@/data/eventCatalog";
+import { qrForDay, readClicks, recordClick, type PaymentQr } from "@/lib/paymentQr";
+import { submitRegistration } from "@/lib/registration";
 
 type Fields = {
   fullName: string;
@@ -29,46 +36,81 @@ const labels: Record<keyof Fields, string> = {
 
 const years = ["I", "II", "III", "IV"];
 
+type Step = 1 | 2 | 3 | 4;
+
+const steps: { id: Step; label: string }[] = [
+  { id: 1, label: "CHOOSE EVENTS" },
+  { id: 2, label: "TEAM DETAILS" },
+  { id: 3, label: "PAYMENT" },
+  { id: 4, label: "DONE" },
+];
+
 export function RegistrationSection() {
+  const [step, setStep] = useState<Step>(1);
   const [fields, setFields] = useState<Fields>(emptyFields);
   const [selected, setSelected] = useState<string[]>([]);
-  const [errors, setErrors] = useState<Partial<Record<keyof Fields | "events", string>>>({});
-  const [submitted, setSubmitted] = useState(false);
-  const [dateKey, setDateKey] = useState(() => localDateKey());
-  const [clicks, setClicks] = useState(0);
+  const [teamName, setTeamName] = useState("");
+  const [members, setMembers] = useState<string[]>([]);
+  const [screenshot, setScreenshot] = useState<File | null>(null);
+  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [busy, setBusy] = useState(false);
+  const [formError, setFormError] = useState("");
+  const [clicksByDay, setClicksByDay] = useState<Record<EventDay, number>>({ 1: 0, 2: 0 });
 
   useEffect(() => {
-    const today = localDateKey();
-    setDateKey(today);
-    setClicks(readClicks(today));
+    setClicksByDay({ 1: readClicks(1), 2: readClicks(2) });
   }, []);
 
-  const activeQr = qrForState(dateKey, clicks);
+  const days = useMemo(() => daysFor(selected), [selected]);
+  const maxTeam = useMemo(() => maxTeamSizeFor(selected), [selected]);
+  const selectedEvents = useMemo(
+    () => selected.map((id) => findEvent(id)).filter((e): e is NonNullable<typeof e> => Boolean(e)),
+    [selected],
+  );
+  const primaryDay: EventDay = days[0] ?? 1;
 
-  const techNames = useMemo(() => technicalEvents.map((e) => e.name), []);
-  const chaosNames = useMemo(() => nonTechnicalEvents.map((e) => e.name), []);
+  const activeQrs: { day: EventDay; qr: PaymentQr; clicks: number }[] = days.map((day) => ({
+    day,
+    qr: qrForDay(day, clicksByDay[day]),
+    clicks: clicksByDay[day],
+  }));
 
-
-  const setField = (key: keyof Fields, value: string) => {
-    setFields((prev) => ({ ...prev, [key]: value }));
+  const clearError = (key: string) =>
     setErrors((prev) => {
       const next = { ...prev };
       delete next[key];
       return next;
     });
+
+  const setField = (key: keyof Fields, value: string) => {
+    setFields((prev) => ({ ...prev, [key]: value }));
+    clearError(key);
   };
 
-  const toggleEvent = (name: string) => {
-    setSelected((prev) => (prev.includes(name) ? prev.filter((n) => n !== name) : [...prev, name]));
-    setErrors((prev) => {
-      const next = { ...prev };
-      delete next.events;
+  const toggleEvent = (id: string) => {
+    setSelected((prev) => (prev.includes(id) ? prev.filter((n) => n !== id) : [...prev, id]));
+    clearError("events");
+  };
+
+  const setMember = (index: number, value: string) => {
+    setMembers((prev) => {
+      const next = [...prev];
+      next[index] = value;
       return next;
     });
   };
 
-  const validate = () => {
-    const next: Partial<Record<keyof Fields | "events", string>> = {};
+  const goToDetails = () => {
+    if (selected.length === 0) {
+      setErrors({ events: "SELECT AT LEAST ONE EVENT" });
+      return;
+    }
+    setMembers((prev) => prev.slice(0, Math.max(0, maxTeamSizeFor(selected) - 1)));
+    setStep(2);
+  };
+
+  const goToPayment = () => {
+    const next: Record<string, string> = {};
     (Object.keys(labels) as (keyof Fields)[]).forEach((key) => {
       if (!fields[key].trim()) next[key] = "FIELD REQUIRED";
     });
@@ -78,24 +120,59 @@ export function RegistrationSection() {
     if (fields.phone.trim() && !/^[+]?[\d][\d\s-]{7,14}$/.test(fields.phone.trim())) {
       next.phone = "ENTER A VALID PHONE NUMBER";
     }
-    if (selected.length === 0) next.events = "SELECT AT LEAST ONE OPERATION";
+    const filledMembers = members.filter((m) => m.trim());
+    if (maxTeam > 1 && filledMembers.length > 0 && !teamName.trim()) {
+      next.teamName = "TEAM NAME REQUIRED";
+    }
     setErrors(next);
-    return Object.keys(next).length === 0;
+    if (Object.keys(next).length > 0) return;
+    setStep(3);
   };
 
-  const onSubmit = (e: React.FormEvent) => {
+  const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!validate()) return;
-    setClicks(recordClick(dateKey));
-    setSubmitted(true);
+    setFormError("");
+    if (!screenshot) {
+      setErrors({ screenshot: "UPLOAD YOUR PAYMENT SCREENSHOT" });
+      return;
+    }
+    const channel = activeQrs[0];
+    if (!channel) return;
+    setBusy(true);
+    const result = await submitRegistration({
+      ...fields,
+      events: selectedEvents.map((e) => e.name),
+      eventDay: primaryDay,
+      teamName: teamName || undefined,
+      teamMembers: members.filter((m) => m.trim()).map((name) => ({ name: name.trim() })),
+      paymentHolder: channel.qr.holder,
+      paymentUpiId: channel.qr.upiId,
+      screenshot,
+    });
+    setBusy(false);
+    if (!result.ok) {
+      setFormError(result.message);
+      return;
+    }
+    setClicksByDay((prev) => {
+      const updated = { ...prev };
+      days.forEach((day) => {
+        updated[day] = recordClick(day);
+      });
+      return updated;
+    });
+    setStep(4);
   };
-
 
   const reset = () => {
     setFields(emptyFields);
     setSelected([]);
+    setTeamName("");
+    setMembers([]);
+    setScreenshot(null);
     setErrors({});
-    setSubmitted(false);
+    setFormError("");
+    setStep(1);
   };
 
   return (
@@ -106,7 +183,7 @@ export function RegistrationSection() {
           <div>
             <p className="eyebrow">REGISTRATION</p>
             <h2 id="register-title">REGISTRATION TERMINAL</h2>
-            <p className="register-subtitle">ENTER YOUR DETAILS TO JOIN THE OPERATION</p>
+            <p className="register-subtitle">CHOOSE EVENTS → TEAM DETAILS → PAY → UPLOAD PROOF</p>
           </div>
           <span className="file-count"><Lock aria-hidden="true" size={12} /> EXCLADE 2K26 // SECURE ACCESS</span>
         </div>
@@ -114,35 +191,82 @@ export function RegistrationSection() {
         <div className="terminal-shell reveal-on-scroll">
           <div className="terminal-bar">
             <span><Terminal aria-hidden="true" size={13} /> REGISTRATION TERMINAL</span>
-            <span>{submitted ? "SESSION COMPLETE" : "AWAITING INPUT"}</span>
+            <span>{step === 4 ? "SESSION COMPLETE" : `STEP ${step} / 3`}</span>
           </div>
 
-          {submitted ? (
-            <div className="register-success" role="status" aria-live="polite">
-              <span className="register-success-mark" aria-hidden="true"><CheckCircle2 size={30} strokeWidth={1.4} /></span>
-              <p className="register-success-kicker">REGISTRATION COMPLETE</p>
-              <h3>ACCESS GRANTED</h3>
-              <p className="register-success-welcome">WELCOME TO<br /><b>EXCLADE 2K26</b></p>
-              <p className="register-success-line">YOUR OPERATION IS CONFIRMED.</p>
-              <dl className="file-facts">
-                <div><dt>PARTICIPANT</dt><dd>{fields.fullName}</dd></div>
-                <div><dt>OPERATIONS SELECTED</dt><dd>{selected.join(" · ")}</dd></div>
-              </dl>
-              <PaymentQrPanel qr={activeQr} clicks={clicks} />
+          <ol className="register-steps" aria-label="Registration progress">
+            {steps.map((s) => (
+              <li key={s.id} className={s.id === step ? "is-current" : s.id < step ? "is-done" : ""}>
+                <span aria-hidden="true">{s.id < step ? "✓" : s.id}</span>
+                {s.label}
+              </li>
+            ))}
+          </ol>
 
-              <p className="register-demo-note">
-                DEMO SUBMISSION — this form is not yet connected to a registration system, so nothing has been stored
-                or sent. Official registration will be confirmed by the coordinators.
-              </p>
-              <button type="button" className="secondary-cta" onClick={reset}>[ NEW ENTRY ]</button>
-            </div>
-          ) : (
-            <form className="register-form" onSubmit={onSubmit} noValidate>
+          {step === 1 && (
+            <div className="register-form">
               <fieldset className="register-fieldset">
-                <legend>PARTICIPANT DETAILS</legend>
+                <legend>STEP 1 — SELECT YOUR EVENTS</legend>
+                <p className="register-hint">
+                  Pick one or more events. Team size and the payment channel are decided by your choices.
+                </p>
+
+                {([1, 2] as EventDay[]).map((day) => (
+                  <div key={day}>
+                    <p className={`register-group-label${day === 2 ? " register-group-label-chaos" : ""}`}>
+                      DAY {day}
+                    </p>
+                    <div className="event-selector">
+                      {eventsByDay(day).map((event) => (
+                        <label
+                          className={`event-option${event.category === "NON-TECHNICAL" ? " event-option-chaos" : ""}${selected.includes(event.id) ? " event-option-active" : ""}`}
+                          key={event.id}
+                        >
+                          <input
+                            type="checkbox"
+                            checked={selected.includes(event.id)}
+                            onChange={() => toggleEvent(event.id)}
+                          />
+                          <span className="event-option-box" aria-hidden="true" />
+                          <span className="event-option-name">
+                            {event.name}
+                            <small>
+                              {event.venue} · {event.time} ·{" "}
+                              {event.maxTeam === 1 ? "SOLO" : `TEAM OF ${event.minTeam}–${event.maxTeam}`}
+                            </small>
+                          </span>
+                        </label>
+                      ))}
+                    </div>
+                  </div>
+                ))}
+
+                {errors.events && <span className="register-error" role="alert">{errors.events}</span>}
+              </fieldset>
+
+              <div className="register-submit-row">
+                <p className="register-demo-note">
+                  {selected.length > 0
+                    ? `${selected.length} event(s) selected · Day ${days.join(" & ")}`
+                    : "No events selected yet."}
+                </p>
+                <button type="button" className="primary-cta" onClick={goToDetails}>
+                  CONTINUE <span aria-hidden="true">→</span>
+                </button>
+              </div>
+            </div>
+          )}
+
+          {step === 2 && (
+            <div className="register-form">
+              <fieldset className="register-fieldset">
+                <legend>STEP 2 — PARTICIPANT DETAILS</legend>
                 <div className="register-fields">
                   {(Object.keys(labels) as (keyof Fields)[]).map((key) => (
-                    <div className={`register-field${errors[key] ? " register-field-error" : ""}${fields[key].trim() && !errors[key] ? " register-field-ok" : ""}`} key={key}>
+                    <div
+                      className={`register-field${errors[key] ? " register-field-error" : ""}${fields[key].trim() && !errors[key] ? " register-field-ok" : ""}`}
+                      key={key}
+                    >
                       <label htmlFor={`reg-${key}`}>{labels[key]}</label>
                       {key === "year" ? (
                         <select
@@ -150,7 +274,6 @@ export function RegistrationSection() {
                           value={fields.year}
                           onChange={(e) => setField("year", e.target.value)}
                           aria-invalid={Boolean(errors.year)}
-                          aria-describedby={errors.year ? "err-year" : undefined}
                         >
                           <option value="">SELECT YEAR</option>
                           {years.map((y) => <option key={y} value={y}>{y} YEAR</option>)}
@@ -162,58 +285,127 @@ export function RegistrationSection() {
                           value={fields[key]}
                           onChange={(e) => setField(key, e.target.value)}
                           aria-invalid={Boolean(errors[key])}
-                          aria-describedby={errors[key] ? `err-${key}` : undefined}
                           autoComplete={key === "fullName" ? "name" : key === "email" ? "email" : key === "phone" ? "tel" : "off"}
                         />
                       )}
-                      {errors[key] && <span className="register-error" id={`err-${key}`}>{errors[key]}</span>}
+                      {errors[key] && <span className="register-error">{errors[key]}</span>}
                     </div>
                   ))}
                 </div>
               </fieldset>
 
-              <fieldset className="register-fieldset">
-                <legend>SELECT YOUR OPERATION</legend>
-                <p className="register-hint">Select one or more operations.</p>
-
-                <p className="register-group-label">TECHNICAL</p>
-                <div className="event-selector">
-                  {techNames.map((name) => (
-                    <label className={`event-option${selected.includes(name) ? " event-option-active" : ""}`} key={name}>
-                      <input type="checkbox" checked={selected.includes(name)} onChange={() => toggleEvent(name)} />
-                      <span className="event-option-box" aria-hidden="true" />
-                      <span className="event-option-name">{name}</span>
-                    </label>
-                  ))}
-                </div>
-
-                <p className="register-group-label register-group-label-chaos">NON-TECHNICAL</p>
-                <div className="event-selector">
-                  {chaosNames.map((name) => (
-                    <label className={`event-option event-option-chaos${selected.includes(name) ? " event-option-active" : ""}`} key={name}>
-                      <input type="checkbox" checked={selected.includes(name)} onChange={() => toggleEvent(name)} />
-                      <span className="event-option-box" aria-hidden="true" />
-                      <span className="event-option-name">{name}</span>
-                    </label>
-                  ))}
-                </div>
-
-                {errors.events && <span className="register-error" role="alert">{errors.events}</span>}
-              </fieldset>
-
-              <fieldset className="register-fieldset">
-                <legend>PAY THE REGISTRATION FEE</legend>
-                <PaymentQrPanel qr={activeQr} clicks={clicks} />
-              </fieldset>
-
+              {maxTeam > 1 ? (
+                <fieldset className="register-fieldset">
+                  <legend>TEAM DETAILS</legend>
+                  <p className="register-hint">
+                    Your selection allows a team of up to {maxTeam}. You are member 1 — add your teammates below
+                    (leave blank if you are competing solo).
+                  </p>
+                  <div className="register-fields">
+                    <div className={`register-field${errors.teamName ? " register-field-error" : ""}`}>
+                      <label htmlFor="reg-team-name">TEAM NAME</label>
+                      <input
+                        id="reg-team-name"
+                        value={teamName}
+                        onChange={(e) => { setTeamName(e.target.value); clearError("teamName"); }}
+                      />
+                      {errors.teamName && <span className="register-error">{errors.teamName}</span>}
+                    </div>
+                    {Array.from({ length: maxTeam - 1 }).map((_, i) => (
+                      <div className="register-field" key={i}>
+                        <label htmlFor={`reg-member-${i}`}>MEMBER {i + 2} NAME (OPTIONAL)</label>
+                        <input
+                          id={`reg-member-${i}`}
+                          value={members[i] ?? ""}
+                          onChange={(e) => setMember(i, e.target.value)}
+                        />
+                      </div>
+                    ))}
+                  </div>
+                </fieldset>
+              ) : (
+                <fieldset className="register-fieldset">
+                  <legend>TEAM DETAILS</legend>
+                  <p className="register-hint">All your selected events are solo — no teammates needed.</p>
+                </fieldset>
+              )}
 
               <div className="register-submit-row">
-                <p className="register-demo-note">
-                  This terminal is a demo entry form — details are not stored or sent anywhere yet.
+                <button type="button" className="secondary-cta" onClick={() => setStep(1)}>[ BACK ]</button>
+                <button type="button" className="primary-cta" onClick={goToPayment}>
+                  CONTINUE TO PAYMENT <span aria-hidden="true">→</span>
+                </button>
+              </div>
+            </div>
+          )}
+
+          {step === 3 && (
+            <form className="register-form" onSubmit={onSubmit} noValidate>
+              <fieldset className="register-fieldset">
+                <legend>STEP 3 — PAY THE REGISTRATION FEE</legend>
+                <p className="register-hint">
+                  Pay using the channel below for your selected day{days.length > 1 ? "s" : ""}, then upload the
+                  payment screenshot.
                 </p>
-                <button type="submit" className="primary-cta">REGISTER NOW <span aria-hidden="true">→</span></button>
+                <div className="payment-qr-row">
+                  {activeQrs.map((entry) => (
+                    <PaymentQrPanel key={entry.day} qr={entry.qr} clicks={entry.clicks} day={entry.day} />
+                  ))}
+                </div>
+              </fieldset>
+
+              <fieldset className="register-fieldset">
+                <legend>UPLOAD PAYMENT SCREENSHOT</legend>
+                <div className={`register-field${errors.screenshot ? " register-field-error" : ""}`}>
+                  <label htmlFor="reg-screenshot">
+                    <Upload aria-hidden="true" size={12} /> PAYMENT SCREENSHOT (IMAGE, MAX 5 MB)
+                  </label>
+                  <input
+                    id="reg-screenshot"
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) => {
+                      setScreenshot(e.target.files?.[0] ?? null);
+                      clearError("screenshot");
+                    }}
+                  />
+                  {screenshot && <span className="register-hint">SELECTED: {screenshot.name}</span>}
+                  {errors.screenshot && <span className="register-error">{errors.screenshot}</span>}
+                </div>
+              </fieldset>
+
+              {formError && <p className="register-error" role="alert">{formError}</p>}
+
+              <div className="register-submit-row">
+                <button type="button" className="secondary-cta" onClick={() => setStep(2)}>[ BACK ]</button>
+                <button type="submit" className="primary-cta" disabled={busy}>
+                  {busy ? "SUBMITTING…" : "SUBMIT REGISTRATION"} <span aria-hidden="true">→</span>
+                </button>
               </div>
             </form>
+          )}
+
+          {step === 4 && (
+            <div className="register-success" role="status" aria-live="polite">
+              <span className="register-success-mark" aria-hidden="true"><CheckCircle2 size={30} strokeWidth={1.4} /></span>
+              <p className="register-success-kicker">REGISTRATION RECEIVED</p>
+              <h3>ACCESS GRANTED</h3>
+              <p className="register-success-welcome">WELCOME TO<br /><b>EXCLADE 2K26</b></p>
+              <dl className="file-facts">
+                <div><dt>PARTICIPANT</dt><dd>{fields.fullName}</dd></div>
+                {teamName && <div><dt>TEAM</dt><dd>{teamName}</dd></div>}
+                <div><dt>EVENTS</dt><dd>{selectedEvents.map((e) => e.name).join(" · ")}</dd></div>
+                <div><dt>DAY</dt><dd>{days.join(" & ")}</dd></div>
+              </dl>
+              <p className="register-success-line">
+                <MailCheck aria-hidden="true" size={14} /> OUR TEAM WILL CONTACT YOU SOON.
+              </p>
+              <p className="register-demo-note">
+                A confirmation e-mail will be sent to <b>{fields.email}</b> — please keep an eye on your recent
+                e-mails (including the spam folder).
+              </p>
+              <button type="button" className="secondary-cta" onClick={reset}>[ NEW ENTRY ]</button>
+            </div>
           )}
         </div>
       </div>
@@ -222,3 +414,5 @@ export function RegistrationSection() {
     </section>
   );
 }
+
+export const registrationEventCount = catalogEvents.length;
