@@ -16,6 +16,7 @@ import { CinematicLoader } from "@/components/CinematicLoader";
 import { GravityWaterCanvas } from "@/components/GravityWaterCanvas";
 import { CustomCursor } from "@/components/environment/CustomCursor";
 import { EnvironmentalBackground } from "@/components/environment/EnvironmentalBackground";
+import { EnvironmentDevPanel } from "@/components/environment/EnvironmentDevPanel";
 import { LabAmbience } from "@/components/LabAmbience";
 import { PageTransition } from "@/components/PageTransition";
 import { ParticleField } from "@/components/ParticleField";
@@ -152,6 +153,7 @@ function RootComponent() {
       <div className="exclade-app">
         <CustomCursor />
         <EnvironmentalBackground />
+         {import.meta.env.DEV && <EnvironmentDevPanel />}
         {showLoader && <CinematicLoader />}
         {!showLoader && (
           <>

@@ -59,12 +59,12 @@ const DEFAULT_PRESET: AtmospherePreset = { wind: 1, dust: 1, haze: 1, light: 1 }
 
 /** Section-based atmosphere — subtle differences only, never a hard switch. */
 export const SECTION_PRESETS: Record<string, AtmospherePreset> = {
-  "/": { wind: 1.15, dust: 1.1, haze: 1, light: 1.1 },
-  "/about": { wind: 0.9, dust: 1.15, haze: 1.35, light: 0.95 },
-  "/events": { wind: 1.05, dust: 0.85, haze: 0.8, light: 1 },
-  "/crew": { wind: 0.72, dust: 0.8, haze: 0.95, light: 0.8 },
-  "/register": { wind: 0.6, dust: 0.7, haze: 0.8, light: 0.85 },
-  "/contact": { wind: 0.7, dust: 0.85, haze: 1, light: 0.9 },
+  "/": { wind: 1.08, dust: 1, haze: 0.92, light: 1.08 },
+  "/about": { wind: 0.84, dust: 0.92, haze: 1.12, light: 0.95 },
+  "/events": { wind: 1, dust: 0.78, haze: 0.76, light: 1 },
+  "/crew": { wind: 0.68, dust: 0.72, haze: 0.86, light: 0.8 },
+  "/register": { wind: 0.56, dust: 0.62, haze: 0.7, light: 0.85 },
+  "/contact": { wind: 0.64, dust: 0.76, haze: 0.9, light: 0.9 },
 };
 
 export function presetFor(pathname: string): AtmospherePreset {

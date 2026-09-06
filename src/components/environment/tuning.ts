@@ -27,10 +27,12 @@ function loadTuning() {
     const saved = window.localStorage.getItem(STORAGE_KEY);
     if (!saved) return;
     const parsed = JSON.parse(saved) as Partial<EnvironmentTuning>;
+    const numberOr = (value: number | undefined, fallback: number) =>
+      typeof value === "number" && Number.isFinite(value) ? value : fallback;
     currentTuning = {
-      windStrength: clamp(Number(parsed.windStrength) || DEFAULT_TUNING.windStrength, 0, 2),
-      particleScale: clamp(Number(parsed.particleScale) || DEFAULT_TUNING.particleScale, 0, 1.5),
-      dustOpacity: clamp(Number(parsed.dustOpacity) || DEFAULT_TUNING.dustOpacity, 0, 1),
+      windStrength: clamp(numberOr(parsed.windStrength, DEFAULT_TUNING.windStrength), 0, 2),
+      particleScale: clamp(numberOr(parsed.particleScale, DEFAULT_TUNING.particleScale), 0, 1.5),
+      dustOpacity: clamp(numberOr(parsed.dustOpacity, DEFAULT_TUNING.dustOpacity), 0, 1),
     };
   } catch {
     currentTuning = { ...DEFAULT_TUNING };
