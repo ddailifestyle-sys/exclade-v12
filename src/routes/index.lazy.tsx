@@ -1,10 +1,12 @@
 import { createLazyFileRoute } from "@tanstack/react-router";
 import { useCallback, useState } from "react";
 
+import { CrewSection } from "@/components/CrewSection";
 import { HeroSection } from "@/components/HeroSection";
 import { LabEntryTransition } from "@/components/LabEntryTransition";
 import { LabIntro } from "@/components/LabIntro";
 import { LabDashboard } from "@/components/LabDashboard";
+import { RegistrationSection } from "@/components/RegistrationSection";
 
 export const Route = createLazyFileRoute("/")({
   component: HomePage,
@@ -24,6 +26,8 @@ function HomePage() {
       <HeroSection onEnterLab={() => setShowGate(true)} />
       <LabIntro />
       <LabDashboard />
+      <CrewSection />
+      <RegistrationSection />
     </>
   );
 }
