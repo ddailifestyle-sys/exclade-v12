@@ -7,6 +7,7 @@ import { useEffect, useRef } from "react";
 
 import { ENV_CONFIG } from "./config";
 import { atmosphere } from "./atmosphere";
+import { DEFAULT_TUNING, getEnvironmentTuning, subscribeEnvironmentTuning, type EnvironmentTuning } from "./tuning";
 
 type Grain = {
   x: number;
@@ -55,6 +56,7 @@ export function SandCanvas() {
     let last = performance.now();
     let fpsAccum = 0;
     let fpsFrames = 0;
+    let tuning: EnvironmentTuning = getEnvironmentTuning();
 
     const layers: Grain[][] = [];
     const swirls: Swirl[] = [];
@@ -83,13 +85,13 @@ export function SandCanvas() {
         [0.95, ENV_CONFIG.particleCount.foreground],
       ];
       for (const [depth, base] of defs) {
-        const count = Math.max(0, Math.round(base * scale));
+        const count = Math.max(0, Math.round(base * scale * tuning.particleScale));
         const grains: Grain[] = [];
         for (let i = 0; i < count; i += 1) grains.push(spawnGrain(depth));
         layers.push(grains);
       }
       // ground-level skimming sand (always the last layer)
-      const groundCount = Math.max(0, Math.round(ENV_CONFIG.particleCount.ground * scale));
+      const groundCount = Math.max(0, Math.round(ENV_CONFIG.particleCount.ground * scale * tuning.particleScale));
       const ground: Grain[] = [];
       for (let i = 0; i < groundCount; i += 1) {
         const g = spawnGrain(0.7);
@@ -99,7 +101,7 @@ export function SandCanvas() {
       layers.push(ground);
 
       clouds.length = 0;
-      const cloudCount = Math.max(0, Math.round(ENV_CONFIG.hazeClouds * scale));
+      const cloudCount = Math.max(0, Math.round(ENV_CONFIG.hazeClouds * scale * tuning.particleScale));
       for (let i = 0; i < cloudCount; i += 1) {
         clouds.push({
           x: rand(0, width),
@@ -132,8 +134,8 @@ export function SandCanvas() {
     };
 
     const drawClouds = (delta: number) => {
-      const haze = atmosphere.preset.haze * ENV_CONFIG.dustOpacity;
-      const wind = atmosphere.windForce();
+      const haze = atmosphere.preset.haze * tuning.dustOpacity;
+      const wind = atmosphere.windForce() * tuning.windStrength;
       for (const cloud of clouds) {
         cloud.x += cloud.speed * wind * delta * ENV_CONFIG.windDirection;
         if (cloud.x - cloud.r > width) cloud.x = -cloud.r;
@@ -246,7 +248,7 @@ export function SandCanvas() {
       drawClouds(delta);
       if (!reduce.matches) updateSwirls(delta);
 
-      const wind = atmosphere.windForce() * (reduce.matches ? 0.12 : 1);
+       const wind = atmosphere.windForce() * tuning.windStrength * (reduce.matches ? 0.12 : 1);
       const turbulence = ENV_CONFIG.turbulence * (reduce.matches ? 0.1 : 1);
       const dust = atmosphere.preset.dust;
       const groundFloor = height - Math.min(160, height * 0.2);
@@ -287,7 +289,7 @@ export function SandCanvas() {
           }
 
           const tone = SAND_TONES[Math.floor(grain.seed * SAND_TONES.length) % SAND_TONES.length]!;
-          const alpha = grain.alpha * dust * (reduce.matches ? 0.5 : 1);
+           const alpha = grain.alpha * dust * (tuning.dustOpacity / DEFAULT_TUNING.dustOpacity) * (reduce.matches ? 0.5 : 1);
           ctx.fillStyle = `rgba(${tone}, ${alpha})`;
           if (grain.depth > 0.8 && Math.abs(grain.vx) > 1.6) {
             ctx.fillRect(grain.x, grain.y, grain.size + Math.min(9, Math.abs(grain.vx) * 1.6), grain.size);
@@ -315,6 +317,10 @@ export function SandCanvas() {
 
     try {
       resize();
+      const unsubscribe = subscribeEnvironmentTuning((nextTuning) => {
+        tuning = nextTuning;
+        buildLayers();
+      });
       window.addEventListener("resize", resize);
       window.addEventListener("pointermove", onPointerMove, { passive: true });
       window.addEventListener("scroll", onScroll, { passive: true });
@@ -330,6 +336,7 @@ export function SandCanvas() {
       window.removeEventListener("pointermove", onPointerMove);
       window.removeEventListener("scroll", onScroll);
       document.removeEventListener("visibilitychange", onVisibility);
+      unsubscribe();
     };
   }, []);
 
