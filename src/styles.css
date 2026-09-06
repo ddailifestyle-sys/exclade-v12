@@ -295,7 +295,7 @@ html {
   opacity: .9;
 }
 
-.exclade-app> :not(.gravity-water-canvas):not(.particle-field):not(.lab-ambience) {
+.exclade-app> :not(.gravity-water-canvas):not(.particle-field):not(.lab-ambience):not(.env-layer):not(.lab-cursor-v2):not(.cursor-trail-canvas) {
   position: relative;
   z-index: 1;
 }
