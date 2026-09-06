@@ -2,6 +2,7 @@ import dhayalanQr from "@/assets/upi-qr-dhayalan.jpg.asset.json";
 import vinishkaQr from "@/assets/upi-qr-vinishka.jpg.asset.json";
 import nandhiniQr from "@/assets/upi-qr-nandhini.jpg.asset.json";
 import santhoshQr from "@/assets/upi-qr-santhosh.jpg.asset.json";
+import type { EventDay } from "@/data/eventCatalog";
 
 export type PaymentQr = {
   id: string;
@@ -10,60 +11,40 @@ export type PaymentQr = {
   url: string;
 };
 
-/** Day 1 of the symposium always opens on the first QR. */
-export const EVENT_DAY_ONE = "2026-09-07";
-
-/**
- * Rotation order. Day 1 starts on the first QR and moves to the next one
- * after every CLICKS_PER_QR registrations; the count restarts each day.
- */
-export const paymentQrs: PaymentQr[] = [
-  { id: "dhayalan", holder: "Dhayalan B", upiId: "dhayalanb2@okhdfcbank", url: dhayalanQr.url },
-  { id: "vinishka", holder: "Vinishka G", upiId: "vinika03042006@oksbi", url: vinishkaQr.url },
-  { id: "nandhini", holder: "Nandhini S", upiId: "9944981163@ptaxis", url: nandhiniQr.url },
-  { id: "santhosh", holder: "Santhosh Gurunathan", upiId: "itsmesanthosh.guru-1@okaxis", url: santhoshQr.url },
-];
-
+/** Rotation cadence: one channel serves 30 registrations, then the next takes over. */
 export const CLICKS_PER_QR = 30;
 
-
-
-export const localDateKey = (date = new Date()) => {
-  const y = date.getFullYear();
-  const m = `${date.getMonth() + 1}`.padStart(2, "0");
-  const d = `${date.getDate()}`.padStart(2, "0");
-  return `${y}-${m}-${d}`;
+/** Day 1 events collect through these channels, day 2 events through the other pair. */
+export const qrsByDay: Record<EventDay, PaymentQr[]> = {
+  1: [
+    { id: "nandhini", holder: "Nandhini S", upiId: "9944981163@ptaxis", url: nandhiniQr.url },
+    { id: "santhosh", holder: "Santhosh Gurunathan", upiId: "itsmesanthosh.guru-1@okaxis", url: santhoshQr.url },
+  ],
+  2: [
+    { id: "dhayalan", holder: "Dhayalan B", upiId: "dhayalanb2@okhdfcbank", url: dhayalanQr.url },
+    { id: "vinishka", holder: "Vinishka G", upiId: "vinika03042006@oksbi", url: vinishkaQr.url },
+  ],
 };
 
-const storageKey = (dateKey: string) => `exclade:reg-clicks:${dateKey}`;
+const storageKey = (day: EventDay) => `exclade:reg-clicks:day-${day}`;
 
-export const readClicks = (dateKey = localDateKey()): number => {
+export const readClicks = (day: EventDay): number => {
   if (typeof window === "undefined") return 0;
-  const raw = window.localStorage.getItem(storageKey(dateKey));
+  const raw = window.localStorage.getItem(storageKey(day));
   const parsed = raw ? Number.parseInt(raw, 10) : 0;
   return Number.isFinite(parsed) && parsed > 0 ? parsed : 0;
 };
 
-export const recordClick = (dateKey = localDateKey()): number => {
-  const next = readClicks(dateKey) + 1;
+export const recordClick = (day: EventDay): number => {
+  const next = readClicks(day) + 1;
   if (typeof window !== "undefined") {
-    window.localStorage.setItem(storageKey(dateKey), String(next));
+    window.localStorage.setItem(storageKey(day), String(next));
   }
   return next;
 };
 
-/** Days elapsed since day 1 (0 for day 1, never negative). */
-const dayOffset = (dateKey: string) => {
-  const diff = Date.parse(dateKey) - Date.parse(EVENT_DAY_ONE);
-  if (!Number.isFinite(diff)) return 0;
-  return Math.max(0, Math.floor(diff / 86_400_000));
-};
-
-/**
- * Day 1 starts on the first QR. Each new day advances one step, and within a
- * day the QR advances once more for every 30 registration clicks.
- */
-export const qrForState = (dateKey: string, clicks: number): PaymentQr => {
-  const step = dayOffset(dateKey) + Math.floor(clicks / CLICKS_PER_QR);
-  return paymentQrs[step % paymentQrs.length]!;
+/** The channel currently on duty for a day: advances once every 30 registrations. */
+export const qrForDay = (day: EventDay, clicks: number): PaymentQr => {
+  const pool = qrsByDay[day];
+  return pool[Math.floor(clicks / CLICKS_PER_QR) % pool.length]!;
 };

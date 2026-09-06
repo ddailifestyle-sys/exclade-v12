@@ -1,14 +1,15 @@
 import { QrCode } from "lucide-react";
 
 import { CLICKS_PER_QR, type PaymentQr } from "@/lib/paymentQr";
+import type { EventDay } from "@/data/eventCatalog";
 
-export function PaymentQrPanel({ qr, clicks }: { qr: PaymentQr; clicks: number }) {
+export function PaymentQrPanel({ qr, clicks, day }: { qr: PaymentQr; clicks: number; day: EventDay }) {
   const remaining = CLICKS_PER_QR - (clicks % CLICKS_PER_QR);
 
   return (
     <div className="payment-qr-panel">
       <div className="payment-qr-head">
-        <span><QrCode aria-hidden="true" size={13} /> PAYMENT CHANNEL</span>
+        <span><QrCode aria-hidden="true" size={13} /> DAY {day} PAYMENT CHANNEL</span>
         <span>SLOT {clicks % CLICKS_PER_QR} / {CLICKS_PER_QR}</span>
       </div>
       <img
@@ -24,8 +25,8 @@ export function PaymentQrPanel({ qr, clicks }: { qr: PaymentQr; clicks: number }
         <div><dt>UPI ID</dt><dd>{qr.upiId}</dd></div>
       </dl>
       <p className="register-hint">
-        Scan with any UPI app to pay the registration fee. This channel rotates after {remaining} more
-        registration{remaining === 1 ? "" : "s"} today.
+        Scan with any UPI app to pay the registration fee for your Day {day} event(s). This channel rotates after{" "}
+        {remaining} more registration{remaining === 1 ? "" : "s"}.
       </p>
     </div>
   );

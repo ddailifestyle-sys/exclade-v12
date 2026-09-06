@@ -4475,3 +4475,58 @@ button.primary-cta {
 .payment-qr-panel .file-facts {
   width: 100%;
 }
+
+/* ---- Registration flow: step bar, event meta, QR row ---- */
+.register-steps {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  list-style: none;
+  margin: 0;
+  padding: 1rem 1.25rem 0;
+  font-size: 0.62rem;
+  letter-spacing: 0.14em;
+}
+.register-steps li {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.4rem 0.7rem;
+  border: 1px solid color-mix(in oklab, currentColor 22%, transparent);
+  border-radius: 999px;
+  opacity: 0.5;
+}
+.register-steps li span {
+  display: grid;
+  place-items: center;
+  width: 1.1rem;
+  height: 1.1rem;
+  border-radius: 999px;
+  border: 1px solid currentColor;
+  font-size: 0.55rem;
+}
+.register-steps li.is-current,
+.register-steps li.is-done { opacity: 1; }
+.register-steps li.is-current { border-color: currentColor; }
+
+.event-option-name small {
+  display: block;
+  margin-top: 0.25rem;
+  font-size: 0.58rem;
+  letter-spacing: 0.08em;
+  opacity: 0.62;
+  text-transform: none;
+}
+
+.payment-qr-row {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+}
+
+.register-field input[type="file"] {
+  padding: 0.55rem;
+  font-size: 0.7rem;
+}
+
+.register-submit-row .secondary-cta { margin-right: auto; }
