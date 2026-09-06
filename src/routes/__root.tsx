@@ -150,7 +150,8 @@ function RootComponent() {
   return (
     <QueryClientProvider client={queryClient}>
       <div className="exclade-app">
-        <LabCursor />
+        <CustomCursor />
+        <EnvironmentalBackground />
         {showLoader && <CinematicLoader />}
         {!showLoader && (
           <>
