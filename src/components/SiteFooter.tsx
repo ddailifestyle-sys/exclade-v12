@@ -34,9 +34,10 @@ export function SiteFooter() {
         </nav>
 
         <div className="footer-ending reveal-on-scroll">
+          <Link className="primary-cta" to="/register">REGISTER NOW <span aria-hidden="true">→</span></Link>
           <div className="footer-status">
             <span>OPERATION STATUS</span>
-            <b>COMPLETE</b>
+            <b>REGISTRATIONS OPEN</b>
           </div>
           <p className="footer-sign">UNTIL THE NEXT OPERATION.</p>
         </div>
