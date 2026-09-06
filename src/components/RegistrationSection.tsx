@@ -36,6 +36,8 @@ const labels: Record<keyof Fields, string> = {
 
 const years = ["I", "II", "III", "IV"];
 
+type ErrorKey = keyof Fields | "events" | "teamName" | "screenshot";
+
 type Step = 1 | 2 | 3 | 4;
 
 const steps: { id: Step; label: string }[] = [
@@ -52,7 +54,7 @@ export function RegistrationSection() {
   const [teamName, setTeamName] = useState("");
   const [members, setMembers] = useState<string[]>([]);
   const [screenshot, setScreenshot] = useState<File | null>(null);
-  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [errors, setErrors] = useState<Partial<Record<ErrorKey, string>>>({});
   const [busy, setBusy] = useState(false);
   const [formError, setFormError] = useState("");
   const [clicksByDay, setClicksByDay] = useState<Record<EventDay, number>>({ 1: 0, 2: 0 });
@@ -75,7 +77,7 @@ export function RegistrationSection() {
     clicks: clicksByDay[day],
   }));
 
-  const clearError = (key: string) =>
+  const clearError = (key: ErrorKey) =>
     setErrors((prev) => {
       const next = { ...prev };
       delete next[key];
@@ -110,7 +112,7 @@ export function RegistrationSection() {
   };
 
   const goToPayment = () => {
-    const next: Record<string, string> = {};
+    const next: Partial<Record<ErrorKey, string>> = {};
     (Object.keys(labels) as (keyof Fields)[]).forEach((key) => {
       if (!fields[key].trim()) next[key] = "FIELD REQUIRED";
     });
@@ -143,7 +145,7 @@ export function RegistrationSection() {
       ...fields,
       events: selectedEvents.map((e) => e.name),
       eventDay: primaryDay,
-      teamName: teamName || undefined,
+      teamName,
       teamMembers: members.filter((m) => m.trim()).map((name) => ({ name: name.trim() })),
       paymentHolder: channel.qr.holder,
       paymentUpiId: channel.qr.upiId,

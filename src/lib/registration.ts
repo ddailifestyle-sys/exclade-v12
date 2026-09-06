@@ -12,7 +12,7 @@ export type RegistrationPayload = {
   phone: string;
   events: string[];
   eventDay: EventDay;
-  teamName?: string;
+  teamName: string;
   teamMembers: TeamMember[];
   paymentHolder: string;
   paymentUpiId: string;
@@ -50,7 +50,7 @@ export async function submitRegistration(payload: RegistrationPayload): Promise<
     college: payload.college.trim(),
     department: payload.department.trim(),
     year: payload.year,
-    team_name: payload.teamName?.trim() || null,
+    team_name: payload.teamName.trim() || null,
     team_members: payload.teamMembers,
     events: payload.events,
     event_day: payload.eventDay,
