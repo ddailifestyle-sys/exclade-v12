@@ -4862,3 +4862,185 @@ button.primary-cta {
     display: none;
   }
 }
+
+/* ---------- Countdown strip ---------- */
+.countdown-strip {
+  position: relative;
+  z-index: 2;
+  padding: clamp(2.5rem, 6vw, 4.5rem) 1.25rem;
+  border-block: 1px solid hsl(var(--lab-line, 34 40% 60%) / 0.25);
+}
+.countdown-inner {
+  max-width: 1180px;
+  margin: 0 auto;
+  display: grid;
+  gap: clamp(1.25rem, 3vw, 2rem);
+  justify-items: center;
+  text-align: center;
+}
+.countdown-copy h2 {
+  margin: 0.35rem 0 0.5rem;
+  font-size: clamp(1.5rem, 4vw, 2.4rem);
+  letter-spacing: 0.08em;
+}
+.countdown-sub {
+  margin: 0;
+  font-size: 0.72rem;
+  letter-spacing: 0.22em;
+  opacity: 0.72;
+}
+.countdown-clock {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.75rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.countdown-clock li {
+  min-width: 5.4rem;
+  padding: 0.85rem 1rem;
+  border: 1px solid currentColor;
+  border-radius: 0.35rem;
+  background: rgb(0 0 0 / 0.35);
+  display: grid;
+  gap: 0.25rem;
+}
+.countdown-clock b {
+  font-size: clamp(1.4rem, 4vw, 2.1rem);
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+}
+.countdown-clock span {
+  font-size: 0.6rem;
+  letter-spacing: 0.24em;
+  opacity: 0.72;
+}
+.countdown-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  justify-content: center;
+}
+
+/* ---------- Schedule + registration info pages ---------- */
+.schedule-page,
+.reginfo-page,
+.admin-page {
+  position: relative;
+  z-index: 2;
+  padding: clamp(3rem, 8vw, 6rem) 1.25rem;
+}
+.schedule-inner,
+.reginfo-inner,
+.admin-inner {
+  max-width: 1080px;
+  margin: 0 auto;
+  display: grid;
+  gap: clamp(1.5rem, 4vw, 2.5rem);
+}
+.schedule-day-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.75rem;
+  border-bottom: 1px solid currentColor;
+  padding-bottom: 0.5rem;
+  margin-bottom: 1rem;
+}
+.schedule-day-head h3 { margin: 0; letter-spacing: 0.16em; }
+.schedule-day-head span { font-size: 0.68rem; letter-spacing: 0.2em; opacity: 0.7; }
+.schedule-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.75rem; }
+.schedule-list li {
+  display: grid;
+  grid-template-columns: minmax(0, 12rem) 1fr;
+  gap: 1rem;
+  padding: 0.9rem 1rem;
+  border: 1px solid hsl(var(--lab-line, 34 40% 60%) / 0.3);
+  border-radius: 0.35rem;
+  background: rgb(0 0 0 / 0.28);
+}
+.schedule-time { font-size: 0.7rem; letter-spacing: 0.16em; opacity: 0.85; }
+.schedule-body h4 { margin: 0 0 0.35rem; letter-spacing: 0.1em; }
+.schedule-body p { margin: 0; display: flex; flex-wrap: wrap; gap: 0.85rem; font-size: 0.68rem; letter-spacing: 0.14em; opacity: 0.78; }
+.schedule-tag { border: 1px solid currentColor; padding: 0.1rem 0.4rem; border-radius: 999px; }
+@media (max-width: 640px) {
+  .schedule-list li { grid-template-columns: 1fr; }
+}
+
+.reginfo-timeline { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.9rem; }
+.reginfo-timeline li {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 1rem;
+  padding: 1rem;
+  border: 1px solid hsl(var(--lab-line, 34 40% 60%) / 0.3);
+  border-radius: 0.35rem;
+  background: rgb(0 0 0 / 0.28);
+}
+.reginfo-step-index { font-size: 1.4rem; opacity: 0.5; font-variant-numeric: tabular-nums; }
+.reginfo-timeline h3 { margin: 0 0 0.3rem; font-size: 0.85rem; letter-spacing: 0.16em; }
+.reginfo-timeline p { margin: 0; font-size: 0.82rem; opacity: 0.82; }
+.reginfo-faq dl { display: grid; gap: 0.9rem; margin: 1rem 0 0; }
+.reginfo-faq dt { letter-spacing: 0.08em; font-weight: 700; }
+.reginfo-faq dd { margin: 0.3rem 0 0; opacity: 0.82; }
+.reginfo-cta { display: grid; gap: 0.9rem; justify-items: center; text-align: center; }
+.reginfo-cta-actions { display: flex; flex-wrap: wrap; gap: 0.75rem; justify-content: center; }
+
+/* ---------- Organiser console ---------- */
+.admin-page-narrow .admin-card { max-width: 26rem; margin: 0 auto; }
+.admin-card {
+  display: grid;
+  gap: 0.5rem;
+  padding: clamp(1.25rem, 4vw, 2rem);
+  border: 1px solid hsl(var(--lab-line, 34 40% 60%) / 0.35);
+  border-radius: 0.4rem;
+  background: rgb(0 0 0 / 0.42);
+}
+.admin-card h1, .admin-card h2 { margin: 0 0 0.25rem; letter-spacing: 0.12em; }
+.admin-label { font-size: 0.62rem; letter-spacing: 0.2em; opacity: 0.75; margin-top: 0.6rem; }
+.admin-input {
+  width: 100%;
+  padding: 0.6rem 0.7rem;
+  border: 1px solid currentColor;
+  border-radius: 0.3rem;
+  background: rgb(0 0 0 / 0.4);
+  color: inherit;
+  font: inherit;
+}
+.admin-card .primary-cta { margin-top: 1rem; justify-self: start; }
+.admin-muted { font-size: 0.72rem; letter-spacing: 0.12em; opacity: 0.7; margin: 0.2rem 0; }
+.admin-notice { font-size: 0.72rem; letter-spacing: 0.14em; }
+.admin-head { display: flex; flex-wrap: wrap; gap: 1rem; justify-content: space-between; align-items: flex-end; }
+.admin-head h1 { margin: 0.25rem 0 0; letter-spacing: 0.14em; }
+.admin-head-actions { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+.admin-stats { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 0.6rem; }
+.admin-stats li {
+  min-width: 6rem; padding: 0.7rem 0.9rem; display: grid; gap: 0.2rem;
+  border: 1px solid hsl(var(--lab-line, 34 40% 60%) / 0.3); border-radius: 0.3rem; background: rgb(0 0 0 / 0.3);
+}
+.admin-stats b { font-size: 1.4rem; font-variant-numeric: tabular-nums; }
+.admin-stats span { font-size: 0.58rem; letter-spacing: 0.2em; opacity: 0.7; }
+.admin-filters { display: flex; gap: 0.5rem; flex-wrap: wrap; }
+.admin-chip {
+  padding: 0.35rem 0.8rem; font-size: 0.62rem; letter-spacing: 0.18em;
+  border: 1px solid currentColor; border-radius: 999px; background: transparent; color: inherit; cursor: pointer;
+}
+.admin-chip.is-active { background: rgb(255 255 255 / 0.14); }
+.admin-rows { display: grid; gap: 0.75rem; }
+.admin-row {
+  display: grid; grid-template-columns: 1fr minmax(0, 15rem); gap: 1rem;
+  padding: 1rem; border: 1px solid hsl(var(--lab-line, 34 40% 60%) / 0.3);
+  border-radius: 0.35rem; background: rgb(0 0 0 / 0.3);
+}
+.admin-row h2 { margin: 0 0 0.3rem; font-size: 1rem; letter-spacing: 0.1em; }
+.admin-row-event { margin: 0.35rem 0; font-size: 0.75rem; letter-spacing: 0.12em; }
+.admin-row-side { display: grid; gap: 0.5rem; align-content: start; justify-items: start; }
+.admin-status { font-size: 0.6rem; letter-spacing: 0.2em; padding: 0.2rem 0.55rem; border: 1px solid currentColor; border-radius: 999px; }
+.admin-status-confirmed { color: hsl(140 60% 62%); }
+.admin-status-rejected { color: hsl(4 70% 66%); }
+.admin-link { font-size: 0.66rem; letter-spacing: 0.16em; }
+@media (max-width: 720px) {
+  .admin-row { grid-template-columns: 1fr; }
+}
