@@ -7,6 +7,7 @@
 import { defineConfig } from "@lovable.dev/vite-tanstack-config";
 
 export default defineConfig({
+  nitro: false,
   vite: {
     // Keep React's hook dispatcher and renderer in the same optimized module
     // graph. Vite can otherwise create a second React instance during a cold
