@@ -15,6 +15,11 @@ import { Route as ContactRouteImport } from './routes/contact'
 import { Route as CrewRouteImport } from './routes/crew'
 import { Route as EventsRouteImport } from './routes/events'
 import { Route as RegisterRouteImport } from './routes/register'
+import { Route as RegistrationRouteImport } from './routes/registration'
+import { Route as ScheduleRouteImport } from './routes/schedule'
+import { Route as AdminIndexRouteImport } from './routes/admin.index'
+import { Route as AdminDashboardRouteImport } from './routes/admin.dashboard'
+import { Route as AdminUsersRouteImport } from './routes/admin.users'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -46,6 +51,31 @@ const RegisterRoute = RegisterRouteImport.update({
   path: '/register',
   getParentRoute: () => rootRouteImport,
 } as any)
+const RegistrationRoute = RegistrationRouteImport.update({
+  id: '/registration',
+  path: '/registration',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ScheduleRoute = ScheduleRouteImport.update({
+  id: '/schedule',
+  path: '/schedule',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminIndexRoute = AdminIndexRouteImport.update({
+  id: '/admin/',
+  path: '/admin/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminDashboardRoute = AdminDashboardRouteImport.update({
+  id: '/admin/dashboard',
+  path: '/admin/dashboard',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminUsersRoute = AdminUsersRouteImport.update({
+  id: '/admin/users',
+  path: '/admin/users',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -54,6 +84,11 @@ export interface FileRoutesByFullPath {
   '/crew': typeof CrewRoute
   '/events': typeof EventsRoute
   '/register': typeof RegisterRoute
+  '/registration': typeof RegistrationRoute
+  '/schedule': typeof ScheduleRoute
+  '/admin/dashboard': typeof AdminDashboardRoute
+  '/admin/users': typeof AdminUsersRoute
+  '/admin/': typeof AdminIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -62,6 +97,11 @@ export interface FileRoutesByTo {
   '/crew': typeof CrewRoute
   '/events': typeof EventsRoute
   '/register': typeof RegisterRoute
+  '/registration': typeof RegistrationRoute
+  '/schedule': typeof ScheduleRoute
+  '/admin/dashboard': typeof AdminDashboardRoute
+  '/admin/users': typeof AdminUsersRoute
+  '/admin': typeof AdminIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -71,14 +111,52 @@ export interface FileRoutesById {
   '/crew': typeof CrewRoute
   '/events': typeof EventsRoute
   '/register': typeof RegisterRoute
+  '/registration': typeof RegistrationRoute
+  '/schedule': typeof ScheduleRoute
+  '/admin/dashboard': typeof AdminDashboardRoute
+  '/admin/users': typeof AdminUsersRoute
+  '/admin/': typeof AdminIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/about' | '/contact' | '/crew' | '/events' | '/register'
+  fullPaths:
+    | '/'
+    | '/about'
+    | '/contact'
+    | '/crew'
+    | '/events'
+    | '/register'
+    | '/registration'
+    | '/schedule'
+    | '/admin/dashboard'
+    | '/admin/users'
+    | '/admin/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/about' | '/contact' | '/crew' | '/events' | '/register'
+  to:
+    | '/'
+    | '/about'
+    | '/contact'
+    | '/crew'
+    | '/events'
+    | '/register'
+    | '/registration'
+    | '/schedule'
+    | '/admin/dashboard'
+    | '/admin/users'
+    | '/admin'
   id:
-    '__root__' | '/' | '/about' | '/contact' | '/crew' | '/events' | '/register'
+    | '__root__'
+    | '/'
+    | '/about'
+    | '/contact'
+    | '/crew'
+    | '/events'
+    | '/register'
+    | '/registration'
+    | '/schedule'
+    | '/admin/dashboard'
+    | '/admin/users'
+    | '/admin/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -88,6 +166,11 @@ export interface RootRouteChildren {
   CrewRoute: typeof CrewRoute
   EventsRoute: typeof EventsRoute
   RegisterRoute: typeof RegisterRoute
+  RegistrationRoute: typeof RegistrationRoute
+  ScheduleRoute: typeof ScheduleRoute
+  AdminDashboardRoute: typeof AdminDashboardRoute
+  AdminUsersRoute: typeof AdminUsersRoute
+  AdminIndexRoute: typeof AdminIndexRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -134,6 +217,41 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof RegisterRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/registration': {
+      id: '/registration'
+      path: '/registration'
+      fullPath: '/registration'
+      preLoaderRoute: typeof RegistrationRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/schedule': {
+      id: '/schedule'
+      path: '/schedule'
+      fullPath: '/schedule'
+      preLoaderRoute: typeof ScheduleRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin/': {
+      id: '/admin/'
+      path: '/admin'
+      fullPath: '/admin/'
+      preLoaderRoute: typeof AdminIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin/dashboard': {
+      id: '/admin/dashboard'
+      path: '/admin/dashboard'
+      fullPath: '/admin/dashboard'
+      preLoaderRoute: typeof AdminDashboardRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin/users': {
+      id: '/admin/users'
+      path: '/admin/users'
+      fullPath: '/admin/users'
+      preLoaderRoute: typeof AdminUsersRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -144,6 +262,11 @@ const rootRouteChildren: RootRouteChildren = {
   CrewRoute: CrewRoute,
   EventsRoute: EventsRoute,
   RegisterRoute: RegisterRoute,
+  RegistrationRoute: RegistrationRoute,
+  ScheduleRoute: ScheduleRoute,
+  AdminDashboardRoute: AdminDashboardRoute,
+  AdminUsersRoute: AdminUsersRoute,
+  AdminIndexRoute: AdminIndexRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

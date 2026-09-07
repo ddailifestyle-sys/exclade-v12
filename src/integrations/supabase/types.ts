@@ -14,11 +14,40 @@ export type Database = {
   }
   public: {
     Tables: {
+      admin_users: {
+        Row: {
+          created_at: string
+          id: string
+          label: string | null
+          password_hash: string
+          updated_at: string
+          username: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          label?: string | null
+          password_hash: string
+          updated_at?: string
+          username: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          label?: string | null
+          password_hash?: string
+          updated_at?: string
+          username?: string
+        }
+        Relationships: []
+      }
       registrations: {
         Row: {
           college: string
+          confirmed_at: string | null
           created_at: string
           department: string
+          details_sent_at: string | null
           email: string
           event_day: number | null
           events: string[]
@@ -35,8 +64,10 @@ export type Database = {
         }
         Insert: {
           college: string
+          confirmed_at?: string | null
           created_at?: string
           department: string
+          details_sent_at?: string | null
           email: string
           event_day?: number | null
           events?: string[]
@@ -53,8 +84,10 @@ export type Database = {
         }
         Update: {
           college?: string
+          confirmed_at?: string | null
           created_at?: string
           department?: string
+          details_sent_at?: string | null
           email?: string
           event_day?: number | null
           events?: string[]
