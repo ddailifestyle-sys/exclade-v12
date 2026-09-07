@@ -18,6 +18,7 @@ import { Route as RegisterRouteImport } from './routes/register'
 import { Route as RegistrationRouteImport } from './routes/registration'
 import { Route as ScheduleRouteImport } from './routes/schedule'
 import { Route as AdminIndexRouteImport } from './routes/admin.index'
+import { Route as AdminDashboardRouteImport } from './routes/admin.dashboard'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -64,6 +65,11 @@ const AdminIndexRoute = AdminIndexRouteImport.update({
   path: '/admin/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AdminDashboardRoute = AdminDashboardRouteImport.update({
+  id: '/admin/dashboard',
+  path: '/admin/dashboard',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -74,6 +80,7 @@ export interface FileRoutesByFullPath {
   '/register': typeof RegisterRoute
   '/registration': typeof RegistrationRoute
   '/schedule': typeof ScheduleRoute
+  '/admin/dashboard': typeof AdminDashboardRoute
   '/admin/': typeof AdminIndexRoute
 }
 export interface FileRoutesByTo {
@@ -85,6 +92,7 @@ export interface FileRoutesByTo {
   '/register': typeof RegisterRoute
   '/registration': typeof RegistrationRoute
   '/schedule': typeof ScheduleRoute
+  '/admin/dashboard': typeof AdminDashboardRoute
   '/admin': typeof AdminIndexRoute
 }
 export interface FileRoutesById {
@@ -97,6 +105,7 @@ export interface FileRoutesById {
   '/register': typeof RegisterRoute
   '/registration': typeof RegistrationRoute
   '/schedule': typeof ScheduleRoute
+  '/admin/dashboard': typeof AdminDashboardRoute
   '/admin/': typeof AdminIndexRoute
 }
 export interface FileRouteTypes {
@@ -110,6 +119,7 @@ export interface FileRouteTypes {
     | '/register'
     | '/registration'
     | '/schedule'
+    | '/admin/dashboard'
     | '/admin/'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -121,6 +131,7 @@ export interface FileRouteTypes {
     | '/register'
     | '/registration'
     | '/schedule'
+    | '/admin/dashboard'
     | '/admin'
   id:
     | '__root__'
@@ -132,6 +143,7 @@ export interface FileRouteTypes {
     | '/register'
     | '/registration'
     | '/schedule'
+    | '/admin/dashboard'
     | '/admin/'
   fileRoutesById: FileRoutesById
 }
@@ -144,6 +156,7 @@ export interface RootRouteChildren {
   RegisterRoute: typeof RegisterRoute
   RegistrationRoute: typeof RegistrationRoute
   ScheduleRoute: typeof ScheduleRoute
+  AdminDashboardRoute: typeof AdminDashboardRoute
   AdminIndexRoute: typeof AdminIndexRoute
 }
 
@@ -212,6 +225,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/admin/dashboard': {
+      id: '/admin/dashboard'
+      path: '/admin/dashboard'
+      fullPath: '/admin/dashboard'
+      preLoaderRoute: typeof AdminDashboardRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -224,6 +244,7 @@ const rootRouteChildren: RootRouteChildren = {
   RegisterRoute: RegisterRoute,
   RegistrationRoute: RegistrationRoute,
   ScheduleRoute: ScheduleRoute,
+  AdminDashboardRoute: AdminDashboardRoute,
   AdminIndexRoute: AdminIndexRoute,
 }
 export const routeTree = rootRouteImport
