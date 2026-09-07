@@ -4,7 +4,9 @@ const footerLinks = [
   ["HOME", "/"],
   ["ABOUT", "/about"],
   ["EVENTS", "/events"],
+  ["SCHEDULE", "/schedule"],
   ["CREW", "/crew"],
+  ["HOW TO REGISTER", "/registration"],
   ["REGISTER", "/register"],
   ["CONTACT", "/contact"],
 ] as const;
