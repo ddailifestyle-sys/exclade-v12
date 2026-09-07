@@ -1,7 +1,8 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 
 import { ChaosZone } from "@/components/ChaosZone";
 import { TechnicalOperations } from "@/components/TechnicalOperations";
+import { eventDateRangeLabel } from "@/data/eventDates";
 
 const title = "Events | EXCLADE 2K26 Technical & Non-Technical";
 const description =
