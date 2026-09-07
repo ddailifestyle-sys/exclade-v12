@@ -1,6 +1,7 @@
 import { createLazyFileRoute } from "@tanstack/react-router";
 import { useCallback, useState } from "react";
 
+import { CountdownStrip } from "@/components/CountdownStrip";
 import { CrewSection } from "@/components/CrewSection";
 import { HeroSection } from "@/components/HeroSection";
 import { LabEntryTransition } from "@/components/LabEntryTransition";
