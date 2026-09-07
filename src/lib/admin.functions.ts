@@ -11,7 +11,9 @@ function sessionConfig() {
     password: process.env["ADMIN_SESSION_SECRET"]!,
     name: "exclade-admin",
     maxAge: 60 * 60 * 8,
-    cookie: { httpOnly: true, secure: true, sameSite: "lax" as const, path: "/" },
+    // "none" + secure so the session survives inside the embedded preview frame,
+    // which is a cross-site context where a "lax" cookie is never sent back.
+    cookie: { httpOnly: true, secure: true, sameSite: "none" as const, path: "/" },
   };
 }
 
