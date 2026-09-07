@@ -4,7 +4,7 @@ import { ContactSection } from "@/components/ContactSection";
 
 const title = "Contact | EXCLADE 2K26 Communication Terminal";
 const description =
-  "Contact the EXCLADE 2K26 crew for event questions, registration support, media requests and coordination at KSR College of Engineering.";
+  "Reach the EXCLADE Association coordinators for registration support, event questions and participant guidance.";
 
 export const Route = createFileRoute("/contact")({
   head: () => ({
