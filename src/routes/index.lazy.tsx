@@ -25,6 +25,7 @@ function HomePage() {
     <>
       {showGate && <LabEntryTransition onDone={finishGate} />}
       <HeroSection onEnterLab={() => setShowGate(true)} />
+      <CountdownStrip />
       <LabIntro />
       <LabDashboard />
       <CrewSection />
